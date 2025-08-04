@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>نظام إدارة القضايا v4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* CSS الموجود يبقى كما هو مع التعديلات */
+:root {
+  --dark-blue: #0a1f3a;
+  --medium-blue: #1a4b7a;
+  --light-blue: #2d8cba;
+  --lightest-blue: #b1d4e0;
+  --accent-blue: #3a9ad9;
+  --white: #ffffff;
+  --gray: #f4f8fe;
+  --border: #d8e4f7;
+  --shadow: rgba(58, 154, 217, 0.2);
+  --success: #28a745;
+  --danger: #dc3545;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--dark-blue) 0%, var(--medium-blue) 100%);
+  color: var(--dark-blue);
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-bottom: 24px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  box-shadow: 0 8px 32px var(--shadow);
+  padding: 25px 20px;
+  margin: 12px auto;
+  width: 98%;
+  max-width: 100%;
+  border: 1.2px solid var(--lightest-blue);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 12px 40px var(--shadow);
+}
+
+.card h2 {
+  margin-top: 0;
+  background: linear-gradient(90deg, var(--medium-blue), var(--light-blue));
+  color: var(--white);
+  border-radius: 10px;
+  padding: 12px 0;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px var(--shadow);
+  font-size: 1.3em;
+  text-align: center;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card h2::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+label {
+  display: block;
+  margin-top: 16px;
+  color: var(--white);
+  font-weight: bold;
+  font-size: 1em;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+input, select, textarea, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 10px;
+  border: 1.2px solid var(--lightest-blue);
+  font-size: 1em;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  background: var(--gray);
+  color: var(--dark-blue);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-blue);
+  background: #e2edfd;
+  color: var(--medium-blue);
+  box-shadow: 0 0 0 3px rgba(58, 154, 217, 0.2);
+}
+
+input[readonly], textarea[readonly] {
+  background: #f0f7ff !important;
+  color: #5a7d9a;
+  font-weight: 500;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  appearance: textfield;
+}
+
+button {
+  background: linear-gradient(90deg, var(--medium-blue), var(--light-blue));
+  color: var(--white);
+  font-weight: bold;
+  border: none;
+  margin-top: 20px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--shadow);
+  font-size: 1em;
+  padding: 14px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover {
+  background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px var(--shadow);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.menu-btn {
+  width: 100%;
+  margin: 12px 0;
+  padding: 16px;
+  background: linear-gradient(90deg, var(--medium-blue), var(--light-blue));
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-weight: bold;
+  box-shadow: 0 4px 12px var(--shadow);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid var(--lightest-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.menu-btn i {
+  font-size: 1.2em;
+}
+
+.menu-btn:hover {
+  background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+  transform: translateY(-3px);
+}
+
+.note {
+  color: var(--lightest-blue);
+  font-size: 0.95em;
+  margin: 15px 0 0 0;
+  text-align: center;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.settings-list {
+  margin: 0 0 16px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-btn {
+  background: linear-gradient(90deg, var(--dark-blue), var(--light-blue));
+  color: var(--white);
+  font-size: 1.05em;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.settings-btn i {
+  font-size: 1.1em;
+}
+
+.settings-btn:hover {
+  background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+  transform: translateY(-2px);
+}
+
+.alert {
+  background: #e8f0fa;
+  color: var(--dark-blue);
+  border: 1.7px solid var(--light-blue);
+  padding: 12px 0;
+  margin: 0 0 15px 0;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 1em;
+  font-weight: 600;
+  box-shadow: 0 4px 12px var(--shadow);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px var(--shadow);
+  min-width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(120deg, #f9fbfe 60%, #e8f2fc 140%);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  min-width: 600px;
+}
+
+th, td {
+  border: 1.2px solid var(--light-blue);
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.98em;
+}
+
+th {
+  background: linear-gradient(90deg, var(--light-blue), #e5f1fd 75%);
+  color: var(--dark-blue);
+  font-weight: bold;
+  font-size: 1.05em;
+}
+
+tr.selected, tr:hover {
+  background: rgba(194, 224, 255, 0.5);
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--light-blue);
+  margin-top: 0;
+}
+
+::-webkit-input-placeholder { color: #7ab7e6; }
+::-moz-placeholder { color: #7ab7e6; }
+:-ms-input-placeholder { color: #7ab7e6; }
+::placeholder { color: #7ab7e6; }
+
+a.future-link {
+  color: var(--lightest-blue);
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: bold;
+  display: inline-block;
+  margin: 15px 0 0 0;
+  font-size: 1.05em;
+  transition: all 0.3s ease;
+  padding: 8px 15px;
+  border-radius: 8px;
+  background: rgba(26, 75, 122, 0.3);
+}
+
+a.future-link:hover {
+  color: var(--white);
+  background: rgba(26, 75, 122, 0.5);
+  text-decoration: underline;
+}
+
+.settings-section {
+  margin-top: 15px;
+}
+
+.excel-btn {
+  background: linear-gradient(90deg, #1d7fbb, #6be4ff);
+  color: #fff;
+  border-radius: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 1.05em;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 4px 12px rgba(45, 140, 186, 0.3);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.excel-btn i {
+  margin-left: 8px;
+  font-size: 1.2em;
+}
+
+.excel-btn:hover {
+  background: linear-gradient(90deg, #6be4ff, #1d7fbb);
+  transform: translateY(-2px);
+}
+
+.sys-info-row {
+  background: #1a3457;
+  color: #fff;
+  border-radius: 10px;
+  margin-top: 10px;
+  padding: 10px 15px;
+  font-weight: bold;
+  font-size: 0.97em;
+  letter-spacing: .5px;
+  text-align: left;
+  direction: ltr;
+  user-select: text;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.sys-info-row span {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#activityHistoryList {
+  margin-top: 10px;
+  background: #0c223b;
+  border-radius: 10px;
+  padding: 12px;
+  color: #fff;
+  font-size: 0.95em;
+  max-height: 160px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+#activityHistoryList li {
+  padding: 6px 0;
+  border-bottom: 1px dashed #b1d4e0;
+  font-family: Tahoma, Arial;
+  list-style-type: none;
+}
+
+#activityHistoryList li:last-child {
+  border-bottom: none;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-group button {
+  flex: 1;
+  margin-top: 0;
+  min-width: 120px;
+}
+
+/* =========== تحسينات التجاوب =========== */
+
+/* تخطيط الشبكي للنماذج */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+/* تحسينات القائمة الرئيسية */
+.menu-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+/* تحسينات الجداول للشاشات الصغيرة */
+.table-scrollable {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table-scrollable table {
+  min-width: 600px;
+}
+
+/* تحسينات للأزرار في الجداول */
+table button {
+  padding: 8px 12px;
+  font-size: 0.9em;
+  margin: 5px;
+  min-width: 80px;
+}
+
+/* تحسينات شريط التنقل */
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 15px;
+}
+
+/* تحسينات عامة للشاشات الصغيرة */
+@media (max-width: 768px) {
+  body {
+    padding: 8px;
+  }
+  
+  .card {
+    padding: 15px;
+    margin: 8px auto;
+  }
+  
+  .card h2 {
+    font-size: 1.2em;
+    padding: 10px 0;
+  }
+  
+  .menu-btn, .settings-btn {
+    font-size: 0.95em;
+    padding: 12px 0;
+  }
+  
+  .excel-btn {
+    padding: 10px;
+    font-size: 0.95em;
+  }
+  
+  th, td {
+    padding: 8px 4px;
+    font-size: 0.9em;
+  }
+  
+  .btn-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-group button {
+    width: 100%;
+  }
+  
+  .sys-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .menu-list {
+    grid-template-columns: 1fr;
+  }
+  
+  input, select, textarea, button {
+    padding: 10px;
+    font-size: 0.95em;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* تحسينات للهواتف الصغيرة جداً (أقل من 480px) */
+@media (max-width: 480px) {
+  body {
+    padding: 5px;
+  }
+  
+  .card {
+    padding: 12px;
+    margin: 5px auto;
+    border-radius: 12px;
+  }
+  
+  .card h2 {
+    font-size: 1.1em;
+    padding: 8px 0;
+  }
+  
+  .menu-btn, .settings-btn {
+    font-size: 0.9em;
+    padding: 10px 0;
+  }
+  
+  .excel-btn {
+    padding: 8px;
+    font-size: 0.9em;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 0.9em;
+  }
+  
+  input, select, textarea {
+    padding: 8px;
+    font-size: 0.9em;
+  }
+  
+  th, td {
+    padding: 6px 3px;
+    font-size: 0.85em;
+  }
+  
+  .sys-info-row {
+    font-size: 0.9em;
+    padding: 8px 10px;
+  }
+  
+  .table-wrap {
+    border-radius: 8px;
+  }
+  
+  table button {
+    padding: 6px 8px;
+    font-size: 0.8em;
+    min-width: 70px;
+  }
+  
+  .note {
+    font-size: 0.9em;
+  }
+}
+
+/* تحسينات للشاشات الكبيرة (أكبر من 1200px) */
+@media (min-width: 1200px) {
+  #container {
+    max-width: 1200px;
+  }
+  
+  .card {
+    padding: 30px;
+  }
+  
+  .menu-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .card h2 {
+    font-size: 1.4em;
+  }
+  
+  .menu-btn, .settings-btn {
+    font-size: 1.15em;
+  }
+}
+
+/* تحسينات للشاشات المتوسطة (أكبر من 768px) */
+@media (min-width: 768px) {
+  .menu-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* تحسينات للجداول */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  min-width: 600px;
+}
+
+/* تحسينات التمرير العمودي */
+.scrollable-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.scrollable-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background-color: var(--light-blue);
+  border-radius: 3px;
+}
+
+/* تحسينات الظلال للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .card {
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+  
+  .card:hover {
+    box-shadow: 0 6px 20px var(--shadow);
+  }
+  
+  button {
+    box-shadow: 0 3px 8px var(--shadow);
+  }
+}
+
+/* تحسينات التباين */
+input, select, textarea {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+button, .menu-btn, .settings-btn, .excel-btn {
+  color: white !important;
+}
+
+/* تحسينات شريط التقدم */
+.progress-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+  display: none;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--light-blue));
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.db-status {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: var(--success);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  z-index: 1000;
+  display: none;
+}
+
+.db-status.error {
+  background: var(--danger);
+}
+
+/* Animations */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: slideIn 0.5s ease;
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="alert" class="alert" style="display:none"></div>
+  <div id="dbStatus" class="db-status"></div>
+  
+  <div id="login-view" class="card">
+    <h2>تسجيل الدخول</h2>
+    <form id="loginForm">
+      <label>اسم المستخدم</label>
+      <input type="text" id="login-username" required autocomplete="username" placeholder="أدخل اسم المستخدم">
+      <label>كلمة المرور</label>
+      <input type="password" id="login-password" required autocomplete="current-password" placeholder="أدخل كلمة المرور">
+      <button type="submit">دخول</button>
+    </form>
+    <div class="note">التواصل 775607037 كـ /</div>
+  </div>
+  
+  <div id="main-view" class="card" style="display:none">
+    <h2>مكتب المحامي إبراهيم الجبهة</h2>
+    <div class="menu-list">
+      <button class="menu-btn" onclick="goto('add-case')" id="menu-add-case"><i class="fas fa-file-circle-plus"></i>إدخال تفاصيل ملف القضية</button>
+      <button class="menu-btn" onclick="goto('search-case')" id="menu-search-case"><i class="fas fa-search"></i>بحث عن القضية</button>
+      <button class="menu-btn" onclick="goto('excel-preview')" id="menu-excel-preview"><i class="fas fa-file-excel"></i>ملف Excel</button>
+      <button class="menu-btn" onclick="goto('future-sync')" id="menu-sync"><i class="fas fa-cloud"></i>المزامنة والإعدادات</button>
+      <button class="menu-btn" onclick="goto('settings')" id="menu-settings"><i class="fas fa-cog"></i>الإعدادات</button>
+      <button id="menu-activity" class="menu-btn" style="display:none;" onclick="goto('activity-page')"><i class="fas fa-history"></i>سجل الدخول والتعديلات</button>
+      <button class="menu-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</button>
+    </div>
+    <div class="note" id="user-welcome"></div>
+  </div>
+  
+  <div id="add-case-view" class="card" style="display:none">
+    <h2>إدخال تفاصيل القضية</h2>
+    <div id="sysInfoRow" class="sys-info-row" style="display:none"></div>
+    <button type="button" class="excel-btn" onclick="goto('excel-preview')"><i class="fas fa-file-excel"></i>ملف Excel</button>
+    <form id="addCaseForm" autocomplete="off">
+      <div id="addCaseFields" class="form-grid"></div>
+      
+      <label>تم الإدخال بواسطة</label>
+      <input type="text" name="entered_by" readonly>
+      
+      <label>تاريخ الإدخال</label>
+      <input type="text" name="entry_date" readonly>
+      
+      <div class="btn-group">
+        <button type="submit">حفظ</button>
+        <button type="button" onclick="goto('main')">عودة</button>
+      </div>
+    </form>
+  </div>
+  
+  <div id="search-case-view" class="card" style="display:none">
+    <h2>بحث عن القضايا</h2>
+    <button type="button" class="excel-btn" onclick="exportToExcel('search')"><i class="fas fa-file-excel"></i>تصدير نتائج البحث إلى Excel</button>
+    <form id="searchCaseForm">
+      <div id="searchCaseFields" class="form-grid"></div>
+      <div class="btn-group">
+        <button type="submit">بحث</button>
+        <button type="button" onclick="goto('main')">عودة</button>
+      </div>
+    </form>
+    <div class="table-wrap">
+      <table id="searchResultsTable" style="display:none;">
+        <thead><tr id="searchResultsHeader"></tr></thead>
+        <tbody id="searchResultsBody"></tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div id="excel-preview-view" class="card" style="display:none">
+    <h2>ملف Excel للقضايا</h2>
+    <div id="excelPreviewContent" class="scrollable-content"></div>
+    <button type="button" class="excel-btn" onclick="downloadExcel()"><i class="fas fa-file-download"></i>تصدير Excel</button>
+    <button type="button" class="settings-btn" onclick="goto('add-case')"><i class="fas fa-arrow-right"></i>عودة</button>
+  </div>
+  
+  <div id="preview-case-view" class="card" style="display:none">
+    <h2>معاينة القضية</h2>
+    <div id="previewCaseContent" class="scrollable-content"></div>
+    <button type="button" onclick="goto('search-case')" class="settings-btn" style="margin-top:20px"><i class="fas fa-arrow-right"></i>عودة</button>
+  </div>
+  
+  <div id="deleted-cases-view" class="card" style="display:none">
+    <h2>سلة المحذوفات</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>رقم القضية</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="deletedCasesBody"></tbody>
+      </table>
+    </div>
+    <button style="margin-top:20px" onclick="goto('main')">عودة</button>
+  </div>
+  
+  <div id="activity-page-view" class="card" style="display:none">
+    <h2>سجل الدخول والتعديلات</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المستخدم</th>
+            <th>العملية</th>
+            <th>التاريخ</th>
+          </tr>
+        </thead>
+        <tbody id="activityTableBody"></tbody>
+      </table>
+    </div>
+    <div class="btn-group">
+      <button type="button" class="settings-btn" onclick="goto('main')"><i class="fas fa-arrow-right"></i>عودة</button>
+      <button type="button" class="settings-btn" onclick="clearActivityLog()" style="background:var(--danger);"><i class="fas fa-trash"></i>مسح السجل</button>
+    </div>
+  </div>
+  
+  <div id="admin-users-view" class="card" style="display:none">
+    <h2>إدارة المستخدمين</h2>
+    <form id="userForm">
+      <div class="form-grid">
+        <div>
+          <label>اسم المستخدم</label>
+          <input type="text" id="username" required placeholder="أدخل اسم مستخدم جديد">
+        </div>
+        <div>
+          <label>كلمة المرور</label>
+          <input type="password" id="password" required placeholder="أدخل كلمة مرور جديدة">
+        </div>
+        <div>
+          <label>صلاحية المستخدم</label>
+          <select id="role" required>
+            <option value="admin">مدير نظام (كامل الصلاحيات)</option>
+            <option value="lawyer">محامي (صلاحيات محدودة)</option>
+          </select>
+        </div>
+      </div>
+      <small style="color:var(--lightest-blue);margin-top:10px;display:block;">
+        <b>مدير نظام:</b> يملك جميع الصلاحيات.<br>
+        <b>محامي:</b> فقط إدخال وتعديل القضايا والبحث عنها.
+      </small>
+      <div class="btn-group">
+        <button type="submit" id="addUserBtn">إضافة مستخدم</button>
+        <button type="button" id="updateUserBtn" style="display:none;">تحديث</button>
+        <button type="button" id="cancelUserEditBtn" style="display:none;background:#aaa;">إلغاء</button>
+      </div>
+    </form>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اسم المستخدم</th>
+            <th>كلمة المرور</th>
+            <th>الصلاحية</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+      </table>
+    </div>
+    <button style="margin-top:20px" onclick="goto('settings')">عودة</button>
+  </div>
+  
+  <div id="admin-fields-view" class="card" style="display:none">
+    <h2>إدارة حقول القضية</h2>
+    <form id="fieldForm">
+      <div class="form-grid">
+        <div>
+          <label>اسم الحقل</label>
+          <input type="text" id="fieldLabel" required placeholder="أدخل اسم الحقل">
+        </div>
+        <div>
+          <label>نوع الحقل</label>
+          <select id="fieldType" required>
+            <option value="">اختر النوع</option>
+            <option value="text">نص قصير</option>
+            <option value="textarea">نص طويل</option>
+            <option value="number">رقم</option>
+            <option value="date">تاريخ</option>
+            <option value="select">قائمة منسدلة</option>
+            <option value="file">ملف</option>
+            <option value="tel">رقم هاتف</option>
+            <option value="readonly">قراءة فقط</option>
+          </select>
+        </div>
+        <div id="optionsRow" style="display:none;">
+          <label>خيارات القائمة المنسدلة (افصل بينها بعلامة |)</label>
+          <input type="text" id="fieldOptions" placeholder="مثال: مدني|جنائي|أحوال شخصية|تنفيذ|أخرى">
+          <div class="note">مثال: لعمل قائمة مثل <b>نوع القضية</b> اكتب: مدني|جنائي|أحوال شخصية|تنفيذ|أخرى</div>
+        </div>
+      </div>
+      <label><input type="checkbox" id="fieldRequired"> إلزامي</label>
+      <div class="btn-group">
+        <button type="submit" id="addFieldBtn">إضافة حقل</button>
+        <button type="button" id="updateFieldBtn" style="display:none;">تحديث</button>
+        <button type="button" id="cancelFieldEditBtn" style="display:none;background:#aaa;">إلغاء</button>
+      </div>
+    </form>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اسم الحقل</th>
+            <th>النوع</th>
+            <th>إلزامي</th>
+            <th>خيارات</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="fieldsTableBody"></tbody>
+      </table>
+    </div>
+    <button style="margin-top:20px" onclick="goto('settings')">عودة</button>
+  </div>
+  
+  <div id="settings-view" class="card" style="display:none">
+    <h2>الإعدادات</h2>
+    <div class="settings-section">
+      <div class="settings-list">
+        <button class="settings-btn" onclick="goto('admin-users')"><i class="fas fa-users"></i>إدارة المستخدمين</button>
+        <button class="settings-btn" onclick="goto('admin-fields')"><i class="fas fa-table-cells"></i>إدارة الحقول</button>
+        <button class="settings-btn" onclick="goto('deleted-cases')"><i class="fas fa-trash"></i>سلة المحذوفات</button>
+        <a class="future-link" href="#" onclick="goto('future-sync');return false;"><i class="fas fa-cloud"></i>الميزات المستقبلية</a>
+      </div>
+      <button class="settings-btn" style="background: var(--lightest-blue); color: var(--dark-blue);" onclick="goto('main')"><i class="fas fa-arrow-right"></i>عودة</button>
+    </div>
+  </div>
+  
+  <div id="future-sync-view" class="card" style="display:none">
+    <h2>المزامنة والإعدادات المستقبلية</h2>
+    <div class="note" style="font-size:1.05em;text-align:right;">
+      <b>المزايا المستقبلية:</b><br>
+      <ul style="text-align:right;direction:rtl;margin-top:10px;padding-right:15px;">
+        <li>المزامنة التلقائية مع Google Drive عند توفر الإنترنت</li>
+        <li>حفظ القضايا وملفاتها في الجهاز ومزامنتها مع نسخة على Google Drive</li>
+        <li>إدارة صلاحيات المستخدمين وربطهم بمزامنة البيانات</li>
+        <li>عرض وإدارة النسخ الاحتياطية واستعادتها</li>
+        <li>ربط تنبيهات الجلسات بالتقويم</li>
+      </ul>
+      <button class="settings-btn" style="margin-top:15px" onclick="openGoogleDrive()"><i class="fab fa-google-drive"></i>مزامنة مع Google Drive</button>
+      <button class="settings-btn" style="margin-top:10px" onclick="backupAllData()"><i class="fas fa-download"></i>حفظ نسخة من البيانات على الجهاز</button>
+      <button type="button" class="settings-btn" style="margin-top:10px" onclick="restoreBackup()"><i class="fas fa-upload"></i>استعادة البيانات من نسخة</button>
+      <button type="button" class="settings-btn" style="margin-top:10px" onclick="exportToExcel('cases')"><i class="fas fa-file-excel"></i>تصدير جميع القضايا إلى Excel</button>
+      <div class="progress-container">
+        <div class="progress-bar" id="backupProgress"></div>
+      </div>
+      <div class="note" style="color:var(--lightest-blue);margin-top:15px;">
+        يمكنك دمج API Google Drive لاحقًا لمزامنة فعلية (راسل المطور لمزيد من البرمجة).
+      </div>
+    </div>
+    <button style="margin-top:15px" class="settings-btn" onclick="goto('main')"><i class="fas fa-arrow-right"></i>عودة</button>
+  </div>
+</div>
+<script>
+/* ========== IndexedDB Database ========== */
+const DB = {
+  db: null,
+  name: "CaseManagementDB",
+  version: 2,
+  
+  open: async function() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.name, this.version);
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        
+        // Create object stores if they don't exist
+        if (!db.objectStoreNames.contains('users')) {
+          const usersStore = db.createObjectStore('users', { keyPath: 'id', autoIncrement: true });
+          // Add initial admin user
+          usersStore.add({ username: "admin", password: "admin771590500", role: "admin" });
+        }
+        
+        if (!db.objectStoreNames.contains('case_fields')) {
+          db.createObjectStore('case_fields', { keyPath: 'id', autoIncrement: true });
+        }
+        
+        if (!db.objectStoreNames.contains('cases')) {
+          db.createObjectStore('cases', { keyPath: 'id', autoIncrement: true });
+        }
+        
+        if (!db.objectStoreNames.contains('deleted_cases')) {
+          db.createObjectStore('deleted_cases', { keyPath: 'id', autoIncrement: true });
+        }
+        
+        if (!db.objectStoreNames.contains('activities')) {
+          db.createObjectStore('activities', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        this.db = event.target.result;
+        showDBStatus("تم الاتصال بقاعدة البيانات بنجاح", "success");
+        resolve();
+      };
+      
+      request.onerror = (event) => {
+        showDBStatus("خطأ في الاتصال بقاعدة البيانات", "error");
+        reject(event.target.error);
+      };
+    });
+  },
+  
+  // Get all records from a store
+  getAll: async function(storeName) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+      
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = (e) => reject(e);
+    });
+  },
+  
+  // Add a record to a store
+  add: async function(storeName, record) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.add(record);
+      
+      request.onsuccess = (e) => resolve(e.target.result);
+      request.onerror = (e) => reject(e);
+    });
+  },
+  
+  // Update a record in a store
+  update: async function(storeName, record) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.put(record);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject(e);
+    });
+  },
+  
+  // Delete a record from a store
+  delete: async function(storeName, id) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.delete(id);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject(e);
+    });
+  },
+  
+  // Clear all records in a store
+  clearStore: async function(storeName) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.clear();
+      
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject(e);
+    });
+  }
+};
+
+// Show database connection status
+function showDBStatus(message, type) {
+  const statusEl = document.getElementById('dbStatus');
+  statusEl.textContent = message;
+  statusEl.className = 'db-status ' + (type === 'error' ? 'error' : '');
+  statusEl.style.display = 'block';
+  
+  setTimeout(() => {
+    statusEl.style.display = 'none';
+  }, 3000);
+}
+
+/* ========== Storage and State ========== */
+function setCurrentUser(u, r) { 
+  localStorage.setItem('currentUser', u); 
+  localStorage.setItem('currentRole', r);
+}
+function getCurrentUser() { 
+  return localStorage.getItem('currentUser') || null; 
+}
+function getCurrentRole() { 
+  return localStorage.getItem('currentRole') || null; 
+}
+function clearCurrentUser() { 
+  localStorage.removeItem('currentUser'); 
+  localStorage.removeItem('currentRole'); 
+}
+function saveLastView(view){ 
+  localStorage.setItem('lastView',view);
+}
+function getLastView(){ 
+  return localStorage.getItem('lastView') || 'login'; 
+}
+function showAlert(txt, timeout=2000) {
+  let alertDiv = document.getElementById("alert");
+  alertDiv.innerText = txt;
+  alertDiv.style.display = "block";
+  alertDiv.style.animation = "fadeIn 0.5s ease";
+  if(timeout>0) setTimeout(()=>{alertDiv.style.display="none"}, timeout);
+}
+function openGoogleDrive() { 
+  window.open("https://drive.google.com/drive/my-drive", "_blank"); 
+}
+
+// إظهار شريط التقدم
+function showProgressBar() {
+  const container = document.querySelector('.progress-container');
+  container.style.display = 'block';
+}
+
+// إخفاء شريط التقدم
+function hideProgressBar() {
+  const container = document.querySelector('.progress-container');
+  container.style.display = 'none';
+}
+
+// تحديث شريط التقدم
+function updateProgressBar(percent) {
+  const progressBar = document.getElementById('backupProgress');
+  progressBar.style.width = percent + '%';
+}
+
+// Global variables
+let users = [];
+let fields = [];
+let cases = [];
+let deletedCases = [];
+let sysActivities = [];
+let userEditIndex = -1, fieldEditIndex = -1;
+let lastSearchResults = [];
+let previewCaseObj = null;
+
+// Initialize the application
+async function initApp() {
+  try {
+    // Open the database
+    await DB.open();
+    
+    // Load all data from IndexedDB
+    users = await DB.getAll('users');
+    fields = await DB.getAll('case_fields');
+    cases = await DB.getAll('cases');
+    deletedCases = await DB.getAll('deleted_cases');
+    sysActivities = await DB.getAll('activities');
+    
+    // Create admin user if not exists
+    if(users.length === 0) {
+      const adminId = await DB.add('users', { username: "admin", password: "admin771590500", role: "admin" });
+      users.push({ id: adminId, username: "admin", password: "admin771590500", role: "admin" });
+    }
+    
+    // Check if XLSX object is available
+    console.log("XLSX object:", typeof XLSX);
+
+    // Continue with app initialization
+    let user = getCurrentUser(), role = getCurrentRole();
+    if(user && role) {
+      goto(getLastView());
+    } else {
+      goto('login');
+    }
+  } catch (error) {
+    console.error('Initialization error:', error);
+    showAlert('خطأ في تهيئة التطبيق: ' + error.message, 5000);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', initApp);
+
+/* ========== SPA Routing ========== */
+function goto(view){
+  // الصفحات المخصصة للمدير فقط
+  const adminOnlyViews = [
+    'admin-users', 'admin-fields', 'deleted-cases', 
+    'activity-page', 'settings', 'future-sync'
+  ];
+  
+  // التحقق من الصلاحيات
+  if(adminOnlyViews.includes(view) && getCurrentRole() !== 'admin') {
+    showAlert("ليس لديك صلاحية الوصول إلى هذه الصفحة", 2500);
+    view = 'main';
+  }
+  
+  saveLastView(view);
+  document.querySelectorAll('.card').forEach(div=>div.style.display="none");
+  document.getElementById(view+'-view').style.display = "block";
+  
+  if(view === "main") { 
+    let user = getCurrentUser();
+    document.getElementById("user-welcome").innerText = user ? "مرحباً، " + user : "";
+    updateMenuByRole();
+  }
+  if(view === "admin-users") renderUsers();
+  if(view === "admin-fields") renderFields();
+  if(view === "add-case") { renderAddCaseForm(); renderSysInfo(); }
+  if(view === "search-case") renderSearchCaseForm();
+  if(view === "preview-case") renderPreviewCase();
+  if(view === "excel-preview") renderExcelPreview();
+  if(view === "deleted-cases") renderDeletedCases();
+  if(view === "activity-page") renderActivityTable();
+}
+
+function updateMenuByRole() {
+  let role = getCurrentRole();
+  let isAdmin = (role === "admin");
+  document.getElementById("menu-settings").classList.toggle("disabled", !isAdmin);
+  document.getElementById("menu-sync").classList.toggle("disabled", !isAdmin);
+  document.getElementById("menu-activity").style.display = isAdmin ? "" : "none";
+}
+
+/* ========== تسجيل الدخول ========== */
+document.getElementById("loginForm").onsubmit = async function(e){
+  e.preventDefault();
+  let u = document.getElementById("login-username").value.trim();
+  let p = document.getElementById("login-password").value;
+  
+  let found = users.find(user=>user.username === u && user.password === p);
+  let role = found ? found.role : null;
+  
+  if(role){
+    setCurrentUser(u, role);
+    let now = new Date();
+    const activity = {
+      username: u, 
+      dt: now.toLocaleDateString("ar-EG") + " " + now.toLocaleTimeString("ar-EG", {hour12: false}), 
+      action: "دخول للنظام"
+    };
+    
+    try {
+      const activityId = await DB.add('activities', activity);
+      activity.id = activityId;
+      sysActivities.push(activity);
+    } catch (error) {
+      console.error('Error saving activity:', error);
+    }
+    
+    showAlert("تم تسجيل الدخول بنجاح", 1200);
+    goto('main');
+  } else {
+    showAlert("بيانات الدخول غير صحيحة!", 2500);
+  }
+  this.reset();
+}
+
+function logout(){
+  clearCurrentUser();
+  goto('login');
+}
+
+/* ========== سجل الدخول والتعديلات ========== */
+function renderActivityTable() {
+  let tbody = document.getElementById("activityTableBody");
+  tbody.innerHTML = sysActivities.length ? sysActivities.map(a=>
+    `<tr><td>${a.username}</td><td>${a.action}</td><td>${a.dt}</td></tr>`
+  ).join('') : "<tr><td colspan='3'>لا يوجد سجل دخول/تعديلات بعد</td></tr>";
+}
+
+async function clearActivityLog() {
+  // Using custom modal for confirmation
+  const confirmClear = await new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 9999;
+    `;
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+                    max-width: 400px; width: 90%;">
+            <p style="color: var(--dark-blue); font-size: 1.1em; margin-bottom: 20px;">
+                سيتم حذف جميع السجل بشكل نهائي! هل أنت متأكد؟
+            </p>
+            <button id="confirmBtn" style="background: var(--danger); color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;
+                                                margin-right: 10px;">تأكيد</button>
+            <button id="cancelBtn" style="background: #aaa; color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;">إلغاء</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('confirmBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(true);
+    };
+    document.getElementById('cancelBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(false);
+    };
+  });
+
+  if(confirmClear) {
+    try {
+      await DB.clearStore('activities');
+      sysActivities = [];
+      renderActivityTable();
+      showAlert("تم مسح السجل!");
+    } catch (error) {
+      console.error('Error clearing activity log:', error);
+      showAlert("فشل في مسح السجل: " + error.message, 3000);
+    }
+  }
+}
+
+/* ========== إدارة المستخدمين ========== */
+function renderUsers() {
+  const tbody = document.getElementById("usersTableBody");
+  tbody.innerHTML = "";
+  users.forEach((user, i) => {
+    const tr = document.createElement("tr");
+    if (userEditIndex === i) tr.style.background = "#e8f5ff";
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${user.username}</td>
+      <td>${user.password}</td>
+      <td>${user.role === "admin" ? "مدير نظام" : "محامي"}</td>
+      <td>
+        <button onclick="editUser(${i})">تعديل</button>
+        <button onclick="deleteUser(${i})" style="background:var(--danger);">حذف</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("userForm").onsubmit = async function(e) {
+  e.preventDefault();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const role = document.getElementById("role").value;
+  
+  if (!username || !password || !role) return;
+  
+  if (users.find((u, idx) => u.username === username && idx !== userEditIndex)) {
+    showAlert("اسم المستخدم موجود بالفعل!", 3000); 
+    return;
+  }
+  
+  try {
+    if(userEditIndex === -1) {
+      const newUser = { username, password, role };
+      const userId = await DB.add('users', newUser);
+      newUser.id = userId;
+      users.push(newUser);
+      showAlert("تمت إضافة المستخدم بنجاح");
+      this.reset();
+    } else {
+      const user = users[userEditIndex];
+      user.username = username;
+      user.password = password;
+      user.role = role;
+      await DB.update('users', user);
+      showAlert("تم تعديل المستخدم بنجاح");
+      this.reset(); 
+      setUserEdit(-1);
+    }
+    renderUsers();
+  } catch (error) {
+    console.error('Error saving user:', error);
+    showAlert("فشل في حفظ المستخدم: " + error.message, 3000);
+  }
+};
+
+window.editUser = function(i) {
+  userEditIndex = i;
+  document.getElementById("username").value = users[i].username;
+  document.getElementById("password").value = users[i].password;
+  document.getElementById("role").value = users[i].role;
+  setUserEdit(i);
+};
+
+window.deleteUser = async function(i) {
+  // Using custom modal for confirmation
+  const confirmDelete = await new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 9999;
+    `;
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+                    max-width: 400px; width: 90%;">
+            <p style="color: var(--dark-blue); font-size: 1.1em; margin-bottom: 20px;">
+                هل تريد حذف المستخدم؟
+            </p>
+            <button id="confirmBtn" style="background: var(--danger); color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;
+                                                margin-right: 10px;">تأكيد</button>
+            <button id="cancelBtn" style="background: #aaa; color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;">إلغاء</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('confirmBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(true);
+    };
+    document.getElementById('cancelBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(false);
+    };
+  });
+
+  if(confirmDelete) {
+    const user = users[i];
+    try {
+      await DB.delete('users', user.id);
+      users.splice(i, 1);
+      showAlert("تم حذف المستخدم");
+      setUserEdit(-1); 
+      document.getElementById("userForm").reset();
+      renderUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showAlert("فشل في حذف المستخدم: " + error.message, 3000);
+    }
+  }
+};
+
+document.getElementById("updateUserBtn").onclick = function() {
+  document.getElementById("userForm").onsubmit(new Event("submit"));
+};
+
+document.getElementById("cancelUserEditBtn").onclick = function() {
+  document.getElementById("userForm").reset(); 
+  setUserEdit(-1);
+};
+
+function setUserEdit(i) {
+  userEditIndex = i;
+  document.getElementById("addUserBtn").style.display = (i === -1) ? "" : "none";
+  document.getElementById("updateUserBtn").style.display = (i !== -1) ? "" : "none";
+  document.getElementById("cancelUserEditBtn").style.display = (i !== -1) ? "" : "none";
+  renderUsers();
+}
+
+/* ========== إدارة الحقول ========== */
+function renderFields() {
+  const tbody = document.getElementById("fieldsTableBody");
+  tbody.innerHTML = "";
+  fields.forEach((field, i) => {
+    const tr = document.createElement("tr");
+    if (fieldEditIndex === i) tr.style.background = "#e8f5ff";
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${field.label}</td>
+      <td>${field.type}</td>
+      <td>${field.required ? "✔️" : ""}</td>
+      <td>${field.type === "select" ? (field.options || "").split("|").join(" | ") : ""}</td>
+      <td>
+        <button onclick="editField(${i})">تعديل</button>
+        <button onclick="deleteField(${i})" style="background:var(--danger);">حذف</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("fieldType").onchange = function() {
+  document.getElementById("optionsRow").style.display = (this.value === "select") ? "" : "none";
+};
+
+document.getElementById("fieldForm").onsubmit = async function(e) {
+  e.preventDefault();
+  let label = document.getElementById("fieldLabel").value.trim();
+  let type = document.getElementById("fieldType").value;
+  let required = document.getElementById("fieldRequired").checked;
+  let options = document.getElementById("fieldOptions").value.trim();
+  
+  if(!label || !type) return;
+  
+  let field = {label, type, required};
+  if(type === "select") field.options = options;
+  
+  try {
+    if(fieldEditIndex === -1) {
+      const fieldId = await DB.add('case_fields', field);
+      field.id = fieldId;
+      fields.push(field); 
+      showAlert("تمت إضافة الحقل");
+    } else {
+      const existingField = fields[fieldEditIndex];
+      existingField.label = label;
+      existingField.type = type;
+      existingField.required = required;
+      if(type === "select") existingField.options = options;
+      await DB.update('case_fields', existingField);
+      showAlert("تم تعديل الحقل");
+    }
+    renderFields(); 
+    this.reset(); 
+    setFieldEdit(-1);
+  } catch (error) {
+    console.error('Error saving field:', error);
+    showAlert("فشل في حفظ الحقل: " + error.message, 3000);
+  }
+};
+
+window.editField = function(i) {
+  fieldEditIndex = i;
+  let f = fields[i];
+  document.getElementById("fieldLabel").value = f.label;
+  document.getElementById("fieldType").value = f.type;
+  document.getElementById("fieldRequired").checked = !!f.required;
+  document.getElementById("optionsRow").style.display = (f.type === "select") ? "" : "none";
+  document.getElementById("fieldOptions").value = f.options || "";
+  setFieldEdit(i);
+};
+
+window.deleteField = async function(i) {
+  // Using custom modal for confirmation
+  const confirmDelete = await new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 9999;
+    `;
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+                    max-width: 400px; width: 90%;">
+            <p style="color: var(--dark-blue); font-size: 1.1em; margin-bottom: 20px;">
+                هل تريد حذف الحقل؟
+            </p>
+            <button id="confirmBtn" style="background: var(--danger); color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;
+                                                margin-right: 10px;">تأكيد</button>
+            <button id="cancelBtn" style="background: #aaa; color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;">إلغاء</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('confirmBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(true);
+    };
+    document.getElementById('cancelBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(false);
+    };
+  });
+
+  if(confirmDelete) {
+    const field = fields[i];
+    try {
+      await DB.delete('case_fields', field.id);
+      fields.splice(i, 1); 
+      showAlert("تم حذف الحقل");
+      setFieldEdit(-1); 
+      document.getElementById("fieldForm").reset();
+      renderFields();
+    } catch (error) {
+      console.error('Error deleting field:', error);
+      showAlert("فشل في حذف الحقل: " + error.message, 3000);
+    }
+  }
+};
+
+document.getElementById("updateFieldBtn").onclick = function() {
+  document.getElementById("fieldForm").onsubmit(new Event("submit"));
+};
+
+document.getElementById("cancelFieldEditBtn").onclick = function() {
+  document.getElementById("fieldForm").reset(); 
+  setFieldEdit(-1);
+};
+
+function setFieldEdit(i) {
+  fieldEditIndex = i;
+  document.getElementById("addFieldBtn").style.display = (i === -1) ? "" : "none";
+  document.getElementById("updateFieldBtn").style.display = (i !== -1) ? "" : "none";
+  document.getElementById("cancelUserEditBtn").style.display = (i !== -1) ? "" : "none";
+  renderFields();
+}
+
+/* ========== سلة المحذوفات ========== */
+function renderDeletedCases() {
+  let tbody = document.getElementById("deletedCasesBody");
+  tbody.innerHTML = deletedCases.length ? deletedCases.map((c, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${c[fields[0]?.label] || ""}</td>
+      <td>
+        <button onclick="restoreCase(${i})">استعادة</button>
+        <button onclick="deleteCasePermanently(${i})" style="background:var(--danger);">حذف نهائي</button>
+      </td>
+    </tr>
+  `).join("") : "<tr><td colspan='3'>لا توجد قضايا محذوفة</td></tr>";
+}
+
+async function restoreCase(i) {
+  let c = deletedCases[i];
+  try {
+    // Add to cases
+    const caseId = await DB.add('cases', c);
+    c.id = caseId;
+    cases.push(c);
+    
+    // Remove from deleted cases
+    await DB.delete('deleted_cases', c.id);
+    deletedCases.splice(i, 1);
+    
+    showAlert("تمت استعادة القضية");
+    renderDeletedCases();
+  } catch (error) {
+    console.error('Error restoring case:', error);
+    showAlert("فشل في استعادة القضية: " + error.message, 3000);
+  }
+}
+
+async function deleteCasePermanently(i) {
+  // Using custom modal for confirmation
+  const confirmDelete = await new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 9999;
+    `;
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+                    max-width: 400px; width: 90%;">
+            <p style="color: var(--dark-blue); font-size: 1.1em; margin-bottom: 20px;">
+                هل أنت متأكد من حذف القضية بشكل نهائي؟
+            </p>
+            <button id="confirmBtn" style="background: var(--danger); color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;
+                                                margin-right: 10px;">تأكيد</button>
+            <button id="cancelBtn" style="background: #aaa; color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;">إلغاء</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('confirmBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(true);
+    };
+    document.getElementById('cancelBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(false);
+    };
+  });
+
+  if(confirmDelete) {
+    const c = deletedCases[i];
+    try {
+      await DB.delete('deleted_cases', c.id);
+      deletedCases.splice(i, 1);
+      showAlert("تم الحذف النهائي");
+      renderDeletedCases();
+    } catch (error) {
+      console.error('Error deleting case:', error);
+      showAlert("فشل في حذف القضية: " + error.message, 3000);
+    }
+  }
+}
+
+/* ========== سجل الدخول والتعديلات ========== */
+function renderSysInfo() {
+  let row = document.getElementById("sysInfoRow");
+  let arr = sysActivities || [];
+  if(arr.length) {
+    let last = arr[arr.length-1];
+    row.style.display = "flex";
+    row.innerHTML = `
+      <span><i class="fa fa-user"></i> ${last.username}</span>
+      <span><i class="fa fa-calendar-alt"></i> ${last.dt}</span>
+      <span>${last.action}</span>
+    `;
+  } else {
+    row.style.display = "none";
+  }
+}
+
+/* ========== إدخال تفاصيل قضية ========== */
+function renderAddCaseForm(){
+  let cont = document.getElementById("addCaseFields");
+  cont.innerHTML = "";
+  
+  // إضافة الحقول الديناميكية
+  fields.forEach((f,i)=>{
+    let html = "";
+    html += `<label>${f.label}${f.required?' *':''}</label>`;
+    let isCaseNumber = (i===0);
+    
+    if(f.type === 'number'){
+      html += `<input type="text" inputmode="decimal" pattern="[0-9\\-\\,\\.\\/\\s]*" name="field_${i}" ${f.required?'required':''} ${isCaseNumber?'onblur="autoFillCaseFields(this.value, this)"':''}>`;
+    } else if(f.type === 'text') {
+      html += `<input type="text" name="field_${i}" ${f.required?'required':''} ${isCaseNumber?'onblur="autoFillCaseFields(this.value, this)"':''}>`;
+    } else if(f.type === 'textarea') {
+      html += `<textarea name="field_${i}" ${f.required?'required':''}></textarea>`;
+    } else if(f.type === 'tel') {
+      html += `<input type="tel" name="field_${i}" ${f.required?'required':''}>`;
+    } else if(f.type === 'date') {
+      html += `<input type="date" name="field_${i}" ${f.required?'required':''}>`;
+    } else if(f.type === 'file') {
+      html += `<input type="file" name="field_${i}" ${f.required?'required':''} onchange="handleFileSelect(event, 'field_${i}')">`;
+    } else if(f.type === 'readonly') {
+      html += `<input type="text" name="field_${i}" readonly value="${getCurrentUser() || ''}">`;
+    } else if(f.type === 'select') {
+      html += `<select name="field_${i}" ${f.required?'required':''}>`;
+      let opts = (f.options||"").split("|");
+      opts.forEach(opt => html += `<option value="${opt.trim()}">${opt.trim()}</option>`);
+      html += `</select>`;
+    }
+    
+    let div = document.createElement("div"); 
+    div.innerHTML = html; 
+    cont.appendChild(div);
+  });
+  
+  // تعيين حقلي النظام الثابتين
+  document.querySelector('input[name="entered_by"]').value = getCurrentUser() || '';
+  document.querySelector('input[name="entry_date"]').value = new Date().toLocaleString("ar-EG");
+  
+  renderSysInfo();
+}
+
+// Function to handle file selection and convert to Base64
+async function handleFileSelect(event, fieldName) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Store Base64 string in a hidden input or data attribute
+        // For simplicity, we'll just store it in the input's dataset
+        event.target.dataset.base64 = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+window.autoFillCaseFields = function(val, inputEl) {
+  let value = val.trim();
+  if(!value) return;
+  
+  let idx = -1;
+  let fieldName = fields[0] && fields[0].label;
+  
+  for(let j=0; j<cases.length; j++) {
+    let rec = cases[j];
+    if(rec[fieldName] && rec[fieldName] === value) { 
+      idx = j; 
+      break; 
+    }
+  }
+  
+  if(idx >= 0) {
+    fields.forEach((f,i)=>{
+      if(i===0) return;
+      let formField = document.forms["addCaseForm"]["field_"+i];
+      if(formField && cases[idx][f.label] !== undefined) {
+        if (f.type === 'file') {
+            // For file types, we don't set the value directly
+            // Instead, we might want to show a preview or indicate a file exists
+            // For now, we'll just skip setting the value for file inputs
+            // If you need to restore files, you'd need a more complex mechanism (e.g., creating a File object from Base64)
+            // For this example, we'll assume files are re-uploaded or handled separately on restore
+        } else {
+            formField.value = cases[idx][f.label];
+        }
+      }
+    });
+    showAlert("تم ملء الحقول تلقائياً لرقم القضية المدخلة");
+  }
+};
+
+/* ========== حفظ بيانات القضية ========== */
+document.getElementById("addCaseForm").onsubmit = async function(e){
+  e.preventDefault();
+  
+  let data = {};
+  
+  // الحصول على بيانات الحقول الديناميكية
+  for (let i = 0; i < fields.length; i++) {
+    const f = fields[i];
+    const inputElement = this["field_" + i];
+    if (f.type === 'file') {
+        // Get Base64 data from the dataset attribute
+        data[f.label] = inputElement ? inputElement.dataset.base64 || "" : "";
+    } else {
+        data[f.label] = inputElement ? inputElement.value : "";
+    }
+  }
+  
+  // إضافة حقلي النظام الثابتين
+  data["تم الإدخال بواسطة"] = this.elements["entered_by"].value;
+  data["تاريخ الإدخال"] = this.elements["entry_date"].value;
+  
+  data["_edited_by"] = getCurrentUser();
+  data["_edit_date"] = new Date().toLocaleString("ar-EG");
+  
+  try {
+    // Save to IndexedDB
+    const caseId = await DB.add('cases', data);
+    data.id = caseId;
+    cases.push(data);
+    
+    // Save activity
+    let now = new Date();
+    const activity = {
+      username: getCurrentUser(), 
+      dt: now.toLocaleDateString("ar-EG") + " " + now.toLocaleTimeString("ar-EG", {hour12: false}), 
+      action: "قام بإضافة قضية"
+    };
+    const activityId = await DB.add('activities', activity);
+    activity.id = activityId;
+    sysActivities.push(activity);
+    
+    showAlert('تم حفظ بيانات القضية', 1800);
+    this.reset();
+    
+    // إعادة تعيين حقلي النظام الثابتين
+    document.querySelector('input[name="entered_by"]').value = getCurrentUser() || '';
+    document.querySelector('input[name="entry_date"]').value = new Date().toLocaleString("ar-EG");
+  } catch (error) {
+    console.error('Error saving case:', error);
+    showAlert('فشل في حفظ القضية: ' + error.message, 3000);
+  }
+};
+
+/* ========== صفحة معاينة ملف إكسل ========== */
+function renderExcelPreview() {
+  if(cases.length === 0) {
+    document.getElementById("excelPreviewContent").innerHTML = 
+      '<div style="color:var(--medium-blue);text-align:center;padding:20px;">لا يوجد ملف Excel محفوظ بعد</div>';
+    return;
+  }
+  
+  let headers = fields.map(f=>f.label).concat(["تم الإدخال بواسطة", "تاريخ الإدخال"]);
+  let wsData = [headers];
+  
+  for(let row of cases){
+    let arr = [];
+    for(let h of headers) {
+        const value = row[h] !== undefined ? String(row[h]) : ""; // Ensure it's a string
+        const fieldObj = fields.find(f => f.label === h); // Find the field object corresponding to the current header 'h'
+
+        if (fieldObj && fieldObj.type === 'file' && value.startsWith("data:")) {
+            arr.push("[ملف مرفق]"); // Represent file as a placeholder in Excel preview
+        } else if (value.length > 32767) {
+            // Truncate long strings to fit Excel cell limit
+            console.warn(`Truncating long string for field "${h}". Original length: ${value.length}`);
+            arr.push(value.substring(0, 32764) + "..."); // 32767 - 3 for "..."
+        } else {
+            arr.push(value);
+        }
+    }
+    wsData.push(arr);
+  }
+  
+  let html = `<div style="max-height:320px;overflow:auto;background:#fff;border-radius:10px;padding:10px;direction:ltr;color:#222;font-size:0.96em;box-shadow:inset 0 0 10px rgba(0,0,0,0.1);">
+      <table border="1" style="border-collapse:collapse;width:100%;">${wsData.map(r=>`<tr>${r.map(cell=>`<td>${cell}</td>`).join('')}</tr>`).join('')}
+      </table></div>`;
+  
+  document.getElementById("excelPreviewContent").innerHTML = html;
+}
+
+function downloadExcel() {
+  console.log("Download Excel function called.");
+  if(cases.length === 0) { 
+    showAlert('لا يوجد ملف Excel محفوظ بعد'); 
+    console.log("No cases data to export.");
+    return; 
+  }
+  
+  console.log("Cases data for export:", cases);
+  
+  let headers = fields.map(f=>f.label).concat(["تم الإدخال بواسطة", "تاريخ الإدخال"]);
+  let wsData = [headers];
+  
+  for(let row of cases){
+    let arr = [];
+    for(let h of headers) {
+        const value = row[h] !== undefined ? String(row[h]) : ""; // Ensure it's a string
+        const fieldObj = fields.find(f => f.label === h); // Find the field object corresponding to the current header 'h'
+
+        if (fieldObj && fieldObj.type === 'file' && value.startsWith("data:")) {
+            arr.push("[ملف مرفق]"); // Represent file as a placeholder in Excel
+        } else if (value.length > 32767) {
+            // Truncate long strings to fit Excel cell limit
+            console.warn(`Truncating long string for field "${h}". Original length: ${value.length}`);
+            arr.push(value.substring(0, 32764) + "..."); // 32767 - 3 for "..."
+        } else {
+            arr.push(value);
+        }
+    }
+    wsData.push(arr);
+  }
+  
+  let wb = XLSX.utils.book_new();
+  let ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, "القضايا");
+  XLSX.writeFile(wb, 'cases_' + (new Date().toISOString().slice(0,10)) + '.xlsx');
+  console.log("XLSX.writeFile called for all cases.");
+}
+
+/* ========== تصدير نتائج البحث فقط ========== */
+function exportToExcel(from){
+  console.log("Export to Excel function called. From:", from);
+  let data = (from === 'search') ? lastSearchResults : cases;
+  
+  if(fields.length === 0 || data.length === 0) { 
+    showAlert('لا توجد بيانات للتصدير!'); 
+    console.log("No fields or data to export.");
+    return; 
+  }
+  
+  console.log((from === 'search' ? 'Search results data' : 'All cases data') + ' for export:', data);
+
+  // إضافة الحقلين الثابتين إلى رؤوس الجدول
+  let headers = fields.map(f=>f.label).concat(["تم الإدخال بواسطة", "تاريخ الإدخال"]);
+  
+  let wsData = [];
+  wsData.push(headers);
+  
+  for(let row of data){
+    let arr = [];
+    for(let h of headers) {
+        const value = row[h] !== undefined ? String(row[h]) : ""; // Ensure it's a string
+        const fieldObj = fields.find(f => f.label === h); // Find the field object corresponding to the current header 'h'
+
+        if (fieldObj && fieldObj.type === 'file' && value.startsWith("data:")) {
+            arr.push("[ملف مرفق]"); // Represent file as a placeholder in Excel
+        } else if (value.length > 32767) {
+            // Truncate long strings to fit Excel cell limit
+            console.warn(`Truncating long string for field "${h}". Original length: ${value.length}`);
+            arr.push(value.substring(0, 32764) + "..."); // 32767 - 3 for "..."
+        } else {
+            arr.push(value);
+        }
+    }
+    wsData.push(arr);
+  }
+  
+  let wb = XLSX.utils.book_new();
+  let ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, "نتائج");
+  XLSX.writeFile(wb, (from==='search'?'search_results':'cases') + "_" + (new Date().toISOString().slice(0,10)) + ".xlsx");
+  console.log("XLSX.writeFile called for " + (from === 'search' ? 'search results' : 'all cases') + ".");
+}
+
+/* ========== البحث عن القضايا ========== */
+function renderSearchCaseForm(){
+  let hiddenLabels = ["عنوان الموكل","هاتف الموكل","عنوان الخصم","قرار المحكمة","قرار المحكمة والمطلوب في الجلسة القادمه","ملف القضية pdf","ملاحظات"];
+  let cont = document.getElementById("searchCaseFields");
+  cont.innerHTML = "";
+  
+  fields.forEach((f,i)=>{
+    let html = "";
+    if(hiddenLabels.includes(f.label)) return;
+    
+    html += `<label>${f.label}</label>`;
+    
+    if(f.type === 'number') {
+      html += `<input type="text" inputmode="decimal" pattern="[0-9\\-\\,\\.\\/\\s]*" name="field_${i}">`;
+    } else if(f.type === 'text' || f.type === 'tel' || f.type === 'date') {
+      html += `<input type="${f.type}" name="field_${i}">`;
+    } else if(f.type === 'select') {
+      html += `<select name="field_${i}"><option value="">الكل</option>`;
+      (f.options||"").split("|").forEach(opt=>html += `<option value="${opt.trim()}">${opt.trim()}</option>`);
+      html += `</select>`;
+    } else if(f.type === "readonly") {
+      html += `<input type="text" name="field_${i}" readonly value="">`;
+    } else if(f.type === "textarea") {
+      html += `<input type="text" name="field_${i}">`;
+    } else if (f.type === "file") {
+        html += `<input type="text" name="field_${i}" placeholder="ابحث عن اسم الملف أو جزء منه">`; // Search by file name/data
+    }
+    
+    let div = document.createElement("div"); 
+    div.innerHTML = html; 
+    cont.appendChild(div);
+  });
+  
+  document.getElementById("searchResultsTable").style.display = "none";
+}
+
+document.getElementById("searchCaseForm").onsubmit = function(e){
+  e.preventDefault();
+  
+  let hiddenLabels = ["عنوان الموكل","هاتف الموكل","عنوان الخصم","قرار المحكمة","قرار المحكمة والمطلوب في الجلسة القادمه","ملف القضية pdf","ملاحظات"];
+  let q = {};
+  
+  fields.forEach((f,i)=>{
+    if(hiddenLabels.includes(f.label)) return;
+    
+    let v = this["field_"+i];
+    if(v && v.value) q[f.label] = String(v.value).trim().toLowerCase(); // Normalize search query
+  });
+  
+  let results = cases.filter(row => {
+    let ok = true;
+    for(let k in q){
+      const storedValue = row[k] !== undefined ? String(row[k]).trim().toLowerCase() : ""; // Normalize stored value
+      if (!storedValue.includes(q[k])) { // Perform case-insensitive, trimmed inclusion check
+        ok = false;
+        break; // No need to check other fields if one doesn't match
+      }
+    }
+    return ok;
+  });
+  
+  lastSearchResults = results;
+  renderSearchResults(results);
+}
+
+function renderSearchResults(results){
+  let table = document.getElementById("searchResultsTable");
+  let thead = document.getElementById("searchResultsHeader");
+  let tbody = document.getElementById("searchResultsBody");
+  
+  if(results.length == 0){
+    table.style.display = "none";
+    showAlert("لا توجد نتائج مطابقة", 2200);
+    return;
+  }
+  
+  table.style.display = "table";
+  thead.innerHTML = ""; 
+  tbody.innerHTML = "";
+  
+  let headers = fields.slice(0,3).map(f=>`<th>${f.label}</th>`).join("") + `<th>إجراءات</th>`;
+  thead.innerHTML = headers;
+  
+  results.forEach((row,idx)=>{
+    let tr = document.createElement("tr");
+    tr.innerHTML = `
+      ${fields.slice(0,3).map(f=>`<td>${row[f.label]||""}</td>`).join("")}
+      <td>
+        <button onclick="previewCase(${idx})">معاينة</button>
+        <button onclick="deleteCaseBySearch(${idx})" style="background:var(--danger);">حذف</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ========== حذف قضية ========== */
+async function deleteCaseBySearch(idx){
+  // Using custom modal for confirmation
+  const confirmDelete = await new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 9999;
+    `;
+    modal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+                    max-width: 400px; width: 90%;">
+            <p style="color: var(--dark-blue); font-size: 1.1em; margin-bottom: 20px;">
+                هل أنت متأكد من حذف هذه القضية؟ سيتم نقلها لسلة المحذوفات.
+            </p>
+            <button id="confirmBtn" style="background: var(--danger); color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;
+                                                margin-right: 10px;">تأكيد</button>
+            <button id="cancelBtn" style="background: #aaa; color: white;
+                                                padding: 10px 20px; border: none;
+                                                border-radius: 5px; cursor: pointer;">إلغاء</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('confirmBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(true);
+    };
+    document.getElementById('cancelBtn').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(false);
+    };
+  });
+
+  if(confirmDelete) {
+    let c = lastSearchResults[idx];
+    let caseIdx = cases.findIndex(row=>fields.length && row[fields[0].label] === c[fields[0].label]);
+    
+    if(caseIdx !== -1){
+      try {
+        // Move to deleted cases
+        const deletedCase = cases[caseIdx];
+        const deletedId = await DB.add('deleted_cases', deletedCase);
+        deletedCase.id = deletedId;
+        deletedCases.push(deletedCase);
+        
+        // Remove from cases
+        await DB.delete('cases', deletedCase.id);
+        cases.splice(caseIdx, 1);
+        
+        // Save activity
+        let now = new Date();
+        const activity = {
+          username: getCurrentUser(), 
+          dt: now.toLocaleDateString("ar-EG") + " " + now.toLocaleTimeString("ar-EG", {hour12: false}), 
+          action: "قام بحذف قضية"
+        };
+        const activityId = await DB.add('activities', activity);
+        activity.id = activityId;
+        sysActivities.push(activity);
+        
+        renderSearchResults(lastSearchResults.filter(r => r !== c));
+        showAlert("تم نقل القضية لسلة المحذوفات");
+      } catch (error) {
+        console.error('Error deleting case:', error);
+        showAlert("فشل في حذف القضية: " + error.message, 3000);
+      }
+    }
+  }
+}
+
+/* ========== معاينة القضية ========== */
+function previewCase(idx){
+  previewCaseObj = lastSearchResults[idx];
+  saveLastView('preview-case');
+  goto('preview-case');
+}
+
+function renderPreviewCase() {
+  if(!previewCaseObj) return;
+  
+  let cont = document.getElementById("previewCaseContent");
+  cont.innerHTML = "";
+  
+  // عرض الحقول الديناميكية
+  fields.forEach(f => {
+    let value = previewCaseObj[f.label] || "لا يوجد";
+    let displayValue = value;
+
+    if (f.type === 'file' && value.startsWith("data:")) {
+        // If it's a file, create a link to download/view it
+        const fileName = previewCaseObj[f.label + "_name"] || "file"; // Assuming you might store file name
+        displayValue = `<a href="${value}" download="${fileName}" target="_blank" style="color:var(--accent-blue);text-decoration:underline;">عرض/تحميل الملف</a>`;
+    }
+
+    cont.innerHTML += `<div style="margin:10px 0;padding:10px;background:rgba(255,255,255,0.1);border-radius:8px;">
+      <b style="color:var(--light-blue);display:block;margin-bottom:5px;">${f.label}:</b>
+      <span style="color:var(--white);">${displayValue}</span>
+    </div>`;
+  });
+  
+  // إضافة الحقلين الثابتين
+  cont.innerHTML += `
+    <div style="margin:10px 0;padding:10px;background:rgba(255,255,255,0.1);border-radius:8px;">
+      <b style="color:var(--light-blue);display:block;margin-bottom:5px;">تم الإدخال بواسطة:</b>
+      <span style="color:var(--white);">${previewCaseObj["تم الإدخال بواسطة"]||"لا يوجد"}</span>
+    </div>
+    <div style="margin:10:px 0;padding:10px;background:rgba(255,255,255,0.1);border-radius:8px;">
+      <b style="color:var(--light-blue);display:block;margin-bottom:5px;">تاريخ الإدخال:</b>
+      <span style="color:var(--white);">${previewCaseObj["تاريخ الإدخال"]||"لا يوجد"}</span>
+    </div>
+  `;
+}
+
+/* ========== النسخ الاحتياطي والاستعادة ========== */
+async function backupAllData() {
+  showProgressBar();
+  updateProgressBar(10);
+
+  try {
+    const backupData = {
+      users: users,
+      case_fields: fields,
+      cases: cases, // Cases will now include Base64 file data
+      deleted_cases: deletedCases,
+      sys_activities: sysActivities,
+      currentUser: localStorage.getItem('currentUser'),
+      currentRole: localStorage.getItem('currentRole'),
+      lastView: localStorage.getItem('lastView'),
+      backupDate: new Date().toLocaleString("ar-EG")
+    };
+    updateProgressBar(40);
+
+    const dataStr = JSON.stringify(backupData, null, 2);
+    updateProgressBar(70);
+
+    const blob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cases_backup_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    updateProgressBar(100);
+    setTimeout(() => {
+      hideProgressBar();
+      showAlert('تم حفظ نسخة من جميع البيانات بنجاح', 3000);
+    }, 500);
+
+  } catch (error) {
+    hideProgressBar();
+    showAlert('فشل حفظ النسخة الاحتياطية: ' + error.message, 5000);
+    console.error("Backup failed:", error);
+  }
+}
+
+async function restoreBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) {
+      document.body.removeChild(input);
+      return;
+    }
+    
+    showProgressBar();
+    updateProgressBar(10);
+
+    const reader = new FileReader();
+    reader.onload = async function(event) {
+      try {
+        const backupData = JSON.parse(event.target.result);
+        updateProgressBar(40);
+        
+        // Use a custom confirmation dialog instead of window.confirm
+        const confirmRestore = await new Promise(resolve => {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+                align-items: center; z-index: 9999;
+            `;
+            modal.innerHTML = `
+                <div style="background: white; padding: 25px; border-radius: 10px;
+                            box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+                            max-width: 400px; width: 90%;">
+                    <p style="color: var(--dark-blue); font-size: 1.1em; margin-bottom: 20px;">
+                        سيتم استبدال جميع البيانات الحالية بالبيانات المستعادة. هل أنت متأكد؟
+                    </p>
+                    <button id="confirmRestoreBtn" style="background: var(--danger); color: white;
+                                                        padding: 10px 20px; border: none;
+                                                        border-radius: 5px; cursor: pointer;
+                                                        margin-right: 10px;">تأكيد</button>
+                    <button id="cancelRestoreBtn" style="background: #aaa; color: white;
+                                                        padding: 10px 20px; border: none;
+                                                        border-radius: 5px; cursor: pointer;">إلغاء</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('confirmRestoreBtn').onclick = () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            };
+            document.getElementById('cancelRestoreBtn').onclick = () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            };
+        });
+
+        if (!confirmRestore) {
+          hideProgressBar();
+          showAlert('تم إلغاء عملية الاستعادة.', 2000);
+          document.body.removeChild(input);
+          return;
+        }
+        
+        // Clear all IndexedDB stores
+        await DB.clearStore('users');
+        await DB.clearStore('case_fields');
+        await DB.clearStore('cases');
+        await DB.clearStore('deleted_cases');
+        await DB.clearStore('activities');
+        
+        updateProgressBar(60);
+        
+        // Restore users
+        for (const user of backupData.users || []) {
+          const newUserId = await DB.add('users', user);
+          user.id = newUserId;
+        }
+        
+        // Restore fields
+        for (const field of backupData.case_fields || []) {
+          const newFieldId = await DB.add('case_fields', field);
+          field.id = newFieldId;
+        }
+        
+        // Restore cases
+        for (const caseItem of backupData.cases || []) {
+          const newCaseId = await DB.add('cases', caseItem);
+          caseItem.id = newCaseId;
+        }
+        
+        // Restore deleted cases
+        for (const deletedCase of backupData.deleted_cases || []) {
+          const newDeletedId = await DB.add('deleted_cases', deletedCase);
+          deletedCase.id = newDeletedId;
+        }
+        
+        // Restore activities
+        for (const activity of backupData.sys_activities || []) {
+          const newActivityId = await DB.add('activities', activity);
+          activity.id = newActivityId;
+        }
+        
+        updateProgressBar(80);
+        
+        // Reload global arrays
+        users = backupData.users || [];
+        fields = backupData.case_fields || [];
+        cases = backupData.cases || [];
+        deletedCases = backupData.deleted_cases || [];
+        sysActivities = backupData.sys_activities || [];
+        
+        // Restore session data
+        if (backupData.currentUser) localStorage.setItem('currentUser', backupData.currentUser);
+        if (backupData.currentRole) localStorage.setItem('currentRole', backupData.currentRole);
+        if (backupData.lastView) localStorage.setItem('lastView', backupData.lastView);
+        
+        updateProgressBar(100);
+        setTimeout(() => {
+          hideProgressBar();
+          showAlert('تم استعادة البيانات بنجاح. سيتم إعادة تحميل الصفحة الآن.', 3000);
+          setTimeout(() => location.reload(), 3000);
+        }, 500);
+      } catch (error) {
+        hideProgressBar();
+        showAlert('خطأ في قراءة ملف النسخة الاحتياطية أو تنسيقه: ' + error.message, 5000);
+        console.error("Restore failed:", error);
+      } finally {
+        document.body.removeChild(input);
+      }
+    };
+    
+    reader.onerror = function() {
+      hideProgressBar();
+      showAlert('حدث خطأ أثناء قراءة الملف.', 5000);
+      document.body.removeChild(input);
+    };
+
+    reader.readAsText(file);
+  };
+  input.click();
+}
+</script>
+</body>
+</html>
